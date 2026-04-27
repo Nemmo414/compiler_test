@@ -1,0 +1,4 @@
+"The enemy attacks!" (1)
+[WAIT(0.5)] (2)
+"You took 5 damage!" (3)
+[ENDDIALOGUE] (0)
