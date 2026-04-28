@@ -80,7 +80,7 @@ void Bytecoder::execute()
 			stack.pop_back();
 			b = stack.back();
 			stack.pop_back();
-			stack.push_back(b - a);
+			stack.push_back(a - b);
 			break;
 		case InstructionType::MUL:
 			a = stack.back();
@@ -94,7 +94,7 @@ void Bytecoder::execute()
 			stack.pop_back();
 			b = stack.back();
 			stack.pop_back();
-			stack.push_back(b / a);
+			stack.push_back(a / b);
 			break;
 		case InstructionType::PRINT:
 			std::cout << stack.back() << "\n";

@@ -2,4 +2,5 @@
 int a = 13;
 int b = a + 1;
 b = a + b;
+int c = 50 / 2 - 1 + 20;
 }
