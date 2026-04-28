@@ -52,18 +52,18 @@ enum VarType
 
 enum InstructionType
 {
-	PUSH,
-	ADDVAR,
-	PUSHFROMVAR,
-	ADDSCOPE,
-	ENDSCOPE,
-	EDIT,
-	END,
-	ADD,
-	SUB,
-	MUL,
-	DIV,
-	PRINT
+	PUSH = 300,
+	ADDVAR = 301,
+	PUSHFROMVAR = 302,
+	ADDSCOPE = 303,
+	ENDSCOPE = 304,
+	EDIT = 305,
+	END = 306,
+	ADD = 307,
+	SUB = 308,
+	MUL = 309,
+	DIV = 310,
+	PRINT = 311
 };
 
 const std::vector<std::string> 

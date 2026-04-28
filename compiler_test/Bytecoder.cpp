@@ -164,7 +164,9 @@ std::string Bytecoder::sayBytecode()
 
 		default:
 			std::cout << "ERROR: Unknown operation type.\n";
-			exit(-1);
+			//exit(-1);
+			std::cout << "String so far: \n";
+			return str +  std::to_string(code.at(i)) + "<-[ERROR HERE]";
 			break;
 		}
 	}

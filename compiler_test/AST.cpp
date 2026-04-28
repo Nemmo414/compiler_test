@@ -732,7 +732,7 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             //bytecodeString += "PUSH ";
             vn = dynamic_cast<varNode*>(currentNode);
             bc.push_back(vn->varID);
-            std::cout << "ACCESSING VARIABLE AT ID " << vn->varID << "--------------------------------\n";
+            std::cout << "ACCESSING VARIABLE ID " << vn->varID << "--------------------------------\n";
         }
         else
         {
@@ -740,7 +740,7 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             //bytecodeString += "PUSHFROMVAR "; //todo: moze da bude i edit var
             vn = dynamic_cast<varNode*>(currentNode);
             bc.push_back(vn->varID);
-            std::cout << "ACCESSING VARIABLE AT ID " << vn->varID << "+++++++++++++++++++++++++++\n";
+            std::cout << "ACCESSING VARIABLE CONTENT AT ID " << vn->varID << "+++++++++++++++++++++++++++\n";
         }
         //bytecodeString += std::to_string(vn->varID) + " \n";
         std::cout << "DONE ACCESSING VARIABLE\n";
@@ -756,12 +756,14 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
         if (vn->varID == getVarCount())  //TODO: ovo nista ne valja, treba da doda ADDVAR ako je potreban tj. ako ova prom. jos nije dodata
         //if(false)
         {
+            std::cout << "Accesing varID " << vn->varID << " in varcreation 00000000000000000000.\n";
             bc.push_back(InstructionType::ADDVAR); //ovde je problem, ne mora uvek ici addvar pre ovoga
             varCount++; // znaci: dodaje se nova promenjiva
         }
         else //INACE : znaci: ako je line int a = 10, a je vec poznat id zbog koda za case:assignment, pa se vraca id
         {
             //bc.push_back(varScopeList.back());
+            std::cout << "PUSING BACK VARID: " << vn->varID << " -38921739821739128739813218739821379183792\n";
             bc.push_back(vn->varID);
             //bytecodeString += "PUSH " + std::to_string(varScopeList.back()) + " \n";
             //bytecodeString += std::to_string(varScopeList.back()) + " \n";
@@ -786,6 +788,7 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             {
                 bc.push_back(InstructionType::ADDVAR);
                 varCount++;
+                std::cout << " Accesing varID " << varCount << " in operation assignment 00000000000000000000.\n";
                 std::cout << " Compiled addvar in assignment.\n";
                 //listOfDeclaredVars.push_back(varScopeList.back()++);
                 //bytecodeString += "ADDVAR \n";
@@ -795,11 +798,11 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             //bytecodeString += "EDIT ";
             vecL = nodesToBytecode(on->left, true); // mozda promeniti u true?
             std::cout << " Compiled left side.\n";
-            if (vecL[0] == InstructionType::PUSHFROMVAR)
+            if (vecL[0] == InstructionType::PUSHFROMVAR and vecL.size() == 2)
             {
-                std::cout << "Found varpush on the right.\n";
-                //std::cout << "Found varpush on the right, adding number " + std::to_string(vecL[1]) + "--------------------------.\n";
-                //bc.push_back(vecL[1]);
+                //std::cout << "Found varpush on the right.\n";
+                std::cout << " Found varpush on the right, not adding number " + std::to_string(vecL[1]) + "--------------------------.\n";
+                bc.push_back(vecL[1]);
                 //bytecodeString += std::to_string(vecL[1]);
             }
             std::cout << " Done and adding to vector...\n";
@@ -809,10 +812,11 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
         }
         else
         {
-            vecR = nodesToBytecode(on->right, false);         //RIGHT pre LEFT zbog oduzimanja i deljenja
+            std::cout << "  DOING A DIFFERENT OPERATION.\n";
+            vecR = nodesToBytecode(on->right, true);         //RIGHT pre LEFT zbog oduzimanja i deljenja
             //bc.insert(bc.end(), vecR.begin(), vecR.end());
             addToVec(bc, vecR);
-            vecL = nodesToBytecode(on->left, true);
+            vecL = nodesToBytecode(on->left, true);          //TRUE u oba slucaja jer kad npr. sabiramo ne treba id
             //bc.insert(bc.end(), vecL.begin(), vecL.end());
             addToVec(bc, vecL);
             switch (on->operation)

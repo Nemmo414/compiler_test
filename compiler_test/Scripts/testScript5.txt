@@ -1,5 +1,5 @@
 {
-int a = 0;
-int b = 1;
-int c = a + 2;
+int a = 13;
+int b = a + 1;
+b = a + b;
 }
