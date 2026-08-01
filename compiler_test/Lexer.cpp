@@ -2,6 +2,7 @@
 
 Lexer::Lexer(std::string src)
 {
+	std::cout << "Lexer constructor running.\n";
 	source = src;
 	formatSource();
 	std::cout << "source: " << source << "\n";
@@ -235,10 +236,12 @@ void Lexer::formatSource()
 	{
 		if (source.at(i) == '/' and source.at(i + 1) == '/')
 		{
-			while (source.at(i) != '\n' and source.at(i) != '\n\r')
+			std::cout << "Parsing (skipping) one-line comment.\n";
+			while (source.at(i) != '\n' and source.at(i) != '\n\r' and i < source.size() - 1)
 			{
 				i++;
 			}
+			std::cout << "Skipped comment.\n";
 		}
 		if (source.at(i) == '/' and source.at(i + 1) == '*')
 		{

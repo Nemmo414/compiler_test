@@ -665,6 +665,11 @@ void AST::printVariables()
     //}
 }
 
+void AST::sayBCLength()
+{
+    std::cout << "Current bytecode size: " << bytecodeLength << "\n";
+}
+
 void AST::addToVec(std::vector<int>& v1, std::vector<int>& v2)
 {
     for (int i = 0; i < v2.size(); i++)
@@ -684,13 +689,18 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
     numNode* nn;
     opNode* on;
     varNode* vn;
+    ifNode* in;
+    funcCallNode* fun;
     int i = 0;
+    int jmp_exit = 0;
     int oldVarCount = 0;
     int oldVC2 = varCount;
     switch (currentNode->type)
     {
     case NodeType::SUBFUNCTION:
         bc.push_back(InstructionType::ADDSCOPE);
+        bytecodeLength++;
+        //sayBCLength();
         //bytecodeString += "ADDSCOPE \n";
         oldVarCount = varScopeList.back();
         oldVC2 = varCount;
@@ -713,14 +723,17 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
         std::cout << "Popped back VARSCOPELIST\n";
         bc.push_back(InstructionType::ENDSCOPE);
         bc.push_back(oldVarCount);
+        bytecodeLength += 2;
         varCount = oldVC2;
         //bytecodeString += "ENDSCOPE " + std::to_string(oldVarCount) + " \n";
         break;
     case NodeType::NUMBER:
         bc.push_back(InstructionType::PUSH);
+        bytecodeLength++;
         //bytecodeString += "PUSH ";
         nn = dynamic_cast<numNode*>(currentNode);
         bc.push_back(nn->value);
+        bytecodeLength++;
         //bytecodeString += (std::to_string(nn->value));
         //bytecodeString += "\n";
         break;
@@ -732,6 +745,7 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             //bytecodeString += "PUSH ";
             vn = dynamic_cast<varNode*>(currentNode);
             bc.push_back(vn->varID);
+            bytecodeLength++;
             std::cout << "ACCESSING VARIABLE ID " << vn->varID << "--------------------------------\n";
         }
         else
@@ -740,6 +754,7 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             //bytecodeString += "PUSHFROMVAR "; //todo: moze da bude i edit var
             vn = dynamic_cast<varNode*>(currentNode);
             bc.push_back(vn->varID);
+            bytecodeLength += 2;
             std::cout << "ACCESSING VARIABLE CONTENT AT ID " << vn->varID << "+++++++++++++++++++++++++++\n";
         }
         //bytecodeString += std::to_string(vn->varID) + " \n";
@@ -758,6 +773,7 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
         {
             std::cout << "Accesing varID " << vn->varID << " in varcreation 00000000000000000000.\n";
             bc.push_back(InstructionType::ADDVAR); //ovde je problem, ne mora uvek ici addvar pre ovoga
+            bytecodeLength++;
             varCount++; // znaci: dodaje se nova promenjiva
         }
         else //INACE : znaci: ako je line int a = 10, a je vec poznat id zbog koda za case:assignment, pa se vraca id
@@ -765,6 +781,7 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             //bc.push_back(varScopeList.back());
             std::cout << "PUSING BACK VARID: " << vn->varID << " -38921739821739128739813218739821379183792\n";
             bc.push_back(vn->varID);
+            bytecodeLength++;
             //bytecodeString += "PUSH " + std::to_string(varScopeList.back()) + " \n";
             //bytecodeString += std::to_string(varScopeList.back()) + " \n";
             //std::cout << "VARSCOPELIST BACK IS " << std::to_string(varScopeList.back()) + ">>>>>>>>>>>>>>>>>>>>>>>>>>>>> \n";
@@ -783,30 +800,36 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             std::cout << " Compiling assignment.\n";
             vecR = nodesToBytecode(on->right, true);
             addToVec(bc, vecR);
+            //bytecodeLength += vecR.size();
             std::cout << " Compiled right side.\n";
             if (on->left->type == VARCREATION)
             {
                 bc.push_back(InstructionType::ADDVAR);
+                bytecodeLength++;
                 varCount++;
                 std::cout << " Accesing varID " << varCount << " in operation assignment 00000000000000000000.\n";
                 std::cout << " Compiled addvar in assignment.\n";
+                varScopeList.back()++; //EKSPERIMENTALNO
                 //listOfDeclaredVars.push_back(varScopeList.back()++);
                 //bytecodeString += "ADDVAR \n";
             }
             std::cout << " Pushing back EDIT.\n";
             bc.push_back(InstructionType::EDIT);
+            bytecodeLength++;
             //bytecodeString += "EDIT ";
-            vecL = nodesToBytecode(on->left, true); // mozda promeniti u true?
+            vecL = nodesToBytecode(on->left, false); // mozda promeniti u true?
             std::cout << " Compiled left side.\n";
             if (vecL[0] == InstructionType::PUSHFROMVAR and vecL.size() == 2)
             {
                 //std::cout << "Found varpush on the right.\n";
                 std::cout << " Found varpush on the right, not adding number " + std::to_string(vecL[1]) + "--------------------------.\n";
                 bc.push_back(vecL[1]);
+                bytecodeLength++;
                 //bytecodeString += std::to_string(vecL[1]);
             }
             std::cout << " Done and adding to vector...\n";
             addToVec(bc, vecL);
+            //bytecodeLength += vecL.size();
             std::cout << " Done and added to vector.\n";
             //bytecodeString += "\n";
         }
@@ -816,9 +839,11 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
             vecR = nodesToBytecode(on->right, true);         //RIGHT pre LEFT zbog oduzimanja i deljenja
             //bc.insert(bc.end(), vecR.begin(), vecR.end());
             addToVec(bc, vecR);
+            //bytecodeLength += vecR.size();
             vecL = nodesToBytecode(on->left, true);          //TRUE u oba slucaja jer kad npr. sabiramo ne treba id
             //bc.insert(bc.end(), vecL.begin(), vecL.end());
             addToVec(bc, vecL);
+            //bytecodeLength += vecL.size();
             switch (on->operation)
             {
             case OperationType::Addition:
@@ -837,9 +862,86 @@ std::vector<int> AST::nodesToBytecode(Node* n, bool gettingValue)
                 bc.push_back(InstructionType::DIV);
                 //bytecodeString += "DIV ";
                 break;
+            case OperationType::CheckEquals:
+                bc.push_back(InstructionType::CHK_EQ);
+                break;
+            case OperationType::CheckNotEquals:
+                bc.push_back(InstructionType::CHK_NEQ);
+                break;
+            case OperationType::CheckLesser:
+                bc.push_back(InstructionType::CHK_LES);
+                break;
+            case OperationType::CheckLesserOrEqual:
+                bc.push_back(InstructionType::CHK_LESORE);
+                break;
+            case OperationType::CheckGreater:
+                bc.push_back(InstructionType::CHK_GRT);
+                break;
+            case OperationType::CheckGreaterOrEqual:
+                bc.push_back(InstructionType::CHK_GRTORE);
+                break;
+            default:
+                std::cout << "ERROR: Unknown operation type!\n";
+                exit(-1);
             }
+            bytecodeLength++;
             //bytecodeString += "\n";
-            break;
+        break;
+    case NodeType::IFSTMT:  //TODO: ovo valjda ne radi, dodati else i to
+        in = static_cast<ifNode*>(currentNode);
+        vecL = nodesToBytecode(in->condition, true);
+        addToVec(bc, vecL);
+        //bytecodeLength += vecL.size();
+        bc.push_back(InstructionType::JMP_IF);
+        bc.push_back(7777); //chekhov's gun 1 setup
+        bytecodeLength += 2;
+
+        i = bc.size() - 1;
+        //i = bytecodeLength - 1;
+
+        vecL = nodesToBytecode(in->body, true);
+        addToVec(bc, vecL);
+        //bytecodeLength += vecL.size();
+
+        if (in->next != nullptr)
+        {
+            bc.push_back(InstructionType::JMP);
+            bc.push_back(8888); //checkhov's gun 2 setup
+            bytecodeLength += 2;
+            //jmp_exit = bc.size() - 1;
+            jmp_exit = bc.size() - 1;
+        }
+
+        
+        bc.at(i) = bytecodeLength; //chekhov's gun 1 payoff
+        //bc.at(i) = bytecodeLength - 1; //chekhov's gun 1 payoff
+
+        if (in->next != nullptr)
+        {
+            vecR = nodesToBytecode(in->next, true);
+            addToVec(bc, vecR); 
+            //bytecodeLength += vecR.size();
+            std::cout << "\t\tADDED MORE BYTECODE FROM ELSE STATEMENT: " << vecR.size() << ", TOTAL SIZE " << bc.size() << "\n";
+        }
+        //TODO: Ovde ima bug gde se iz nekog razloga velicina vektora ne promeni pa stavi JMP [ta pozicija]
+        //      Izgleda da je to jer se duzina ukupnog bytecodea ne pamti izmedju callova funckije.
+        //bc.at(jmp_exit) = bc.size() - 1; //chekhov's gun 2 payoff
+        bc.at(jmp_exit) = bytecodeLength; //chekhov's gun 2 payoff
+        //std::cout << "JUMP ENDS AT INDEX " << bc.at(i) << ".\n";
+        break;
+    case NodeType::FUNCTIONCALL:
+        fun = static_cast<funcCallNode*>(currentNode);
+        if (fun->funcName != "print")
+        {
+            std::cout << "ERROR: Print is the only supported function so far.\n";
+            exit(-1);
+        }
+        vecL = nodesToBytecode(fun->args, true);
+        addToVec(bc, vecL);
+        //bytecodeLength += vecL.size();
+        bc.push_back(InstructionType::PRINT);
+        bytecodeLength++;
+        break;
     default:
         std::cout << "ERROR: Unsupported node type: " << nodeTypeString(currentNode->type) << "\n";
         exit(-1);

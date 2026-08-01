@@ -44,7 +44,7 @@ struct varNode : public Node
 struct funcCallNode : public Node
 {
 	std::string funcName;
-	Node* args;
+	Node* args = nullptr;
 };
 
 struct subNode : public Node
@@ -131,6 +131,8 @@ struct AST
 
 	void printVariables();
 
+	int bytecodeLength = 0;
+	void sayBCLength();
 	std::vector<int> varScopeList = {0};
 	std::vector<int> listOfDeclaredVars;
 	int varCount = 0;

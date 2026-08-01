@@ -139,6 +139,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="consts.cpp" />
     <ClCompile Include="fibonacci.cpp" />
+    <ClCompile Include="sfml_util.cpp" />
     <ClCompile Include="Token.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -148,6 +149,7 @@
     <ClInclude Include="fibonacci.h" />
     <ClInclude Include="Interpreter.h" />
     <ClInclude Include="Lexer.h" />
+    <ClInclude Include="sfml_util.h" />
     <ClInclude Include="Token.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

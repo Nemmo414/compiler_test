@@ -50,6 +50,7 @@ enum VarType
 	String
 };
 
+/*
 enum InstructionType
 {
 	PUSH = 300,
@@ -63,8 +64,35 @@ enum InstructionType
 	SUB = 308,
 	MUL = 309,
 	DIV = 310,
-	PRINT = 311
+	PRINT = 311,
+	JMP_IF = 312
 };
+*/
+
+enum InstructionType
+{
+	PUSH,
+	ADDVAR,
+	PUSHFROMVAR,
+	ADDSCOPE,
+	ENDSCOPE,
+	EDIT,
+	END,
+	ADD,
+	SUB,
+	MUL,
+	DIV,
+	CHK_EQ,
+	CHK_NEQ,
+	CHK_LES,
+	CHK_LESORE,
+	CHK_GRT,
+	CHK_GRTORE,
+	PRINT,
+	JMP_IF,
+	JMP
+};
+
 
 const std::vector<std::string> 
 Keywords = 

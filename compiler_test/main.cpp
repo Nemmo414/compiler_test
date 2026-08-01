@@ -5,15 +5,82 @@
 #include "Interpreter.h"
 #include "AST.h"
 #include "Bytecoder.h"
+#include "sfml_util.h"
 //#include "fibonacci.h" ne brisi ovaj komentar, za uspomenu
 
 int main()
 {
-    //std::cout << "starting\n";
-    std::string fname = "Scripts/testScript5.txt";
+    std::cout << "starting\n";
+    std::string fname = "Scripts/testScript7.txt";
 
     std::ifstream inputFile(fname);
     std::string source{ std::istreambuf_iterator<char>(inputFile), std::istreambuf_iterator<char>() };
+    std::cout << "loaded script file.\n";
+
+
+    sf::RenderWindow window(sf::VideoMode(1200, 800), "Bytecode viewer");
+    window.setFramerateLimit(30);
+
+    sf::Font font1;
+    font1.loadFromFile("Fonts/DOS.ttf");
+
+    sf::Text testText;
+    testText.setFont(font1);
+    testText.setCharacterSize(32.f);
+    testText.setFillColor(sf::Color(230, 230, 225));
+    testText.setPosition(540, 64);
+    testText.setString("Bytecode position index: ");
+
+    std::vector<highlightableText> codeText;
+
+    std::vector<int> code = { InstructionType::PUSH, 5, InstructionType::ADDVAR, InstructionType::EDIT, 0,
+                             InstructionType::PUSH, 3, InstructionType::ADDVAR, InstructionType::EDIT, 1,
+                             InstructionType::PUSHFROMVAR, 1, InstructionType::EDIT, 0, InstructionType::PUSHFROMVAR,
+                             0, InstructionType::PRINT, InstructionType::END };
+
+    byteCodeToText(code, codeText, font1);
+
+    sf::Vector2f textPos = {64, 32};
+    float spaceLength = 8.f;
+    float lineGap = 26;
+    std::string textString;
+    for (int i = 0; i < codeText.size(); i++)
+    {
+        codeText.at(i).setPosition(textPos);
+        textPos.x += codeText.at(i).text.getGlobalBounds().getSize().x + spaceLength;
+        //textString = codeText.at(i).text.getString();
+        if (codeText.at(i).endOfLine == true)
+        {
+            textPos.x = 64;
+            textPos.y += lineGap;
+        }
+    }
+
+    while (window.isOpen())
+    {
+        sf::Event event;
+        while (window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed)
+            {
+                window.close();
+            }
+        }
+
+        window.clear(sf::Color::Blue);
+        for (int i = 0; i < codeText.size(); i++)
+        {
+            //window.draw(codeText.at(i).bgRect);
+            window.draw(codeText.at(i).text);
+        }
+        window.draw(testText);
+        window.display();
+    }
+
+    //TODO: Dodati execute one by one
+
+    return 0;
+
     //std::cout << source << "\n";
     /*
     if (!inputFile.is_open()) {
@@ -33,7 +100,7 @@ int main()
     inputFile.close();
     */
 
-    std::vector<int> code = {InstructionType::PUSH, 5, InstructionType::ADDVAR, InstructionType::EDIT, 0,
+    std::vector<int> code2 = {InstructionType::PUSH, 5, InstructionType::ADDVAR, InstructionType::EDIT, 0,
                              InstructionType::PUSH, 3, InstructionType::ADDVAR, InstructionType::EDIT, 1,
                              InstructionType::PUSHFROMVAR, 1, InstructionType::EDIT, 0, InstructionType::PUSHFROMVAR,
                              0, InstructionType::PRINT, InstructionType::END};
@@ -44,17 +111,20 @@ int main()
     //std::string source = "13+ (2+7 ) -3 * 2 +(1 - (2*2) +3 * (8-5) *4);";
     //std::string source = "3* (2+7 ) /3 * (2) + (1 - (2*2)) + 3";
     //std::string source = "((2 + 1) * 2) - 3 * ((1-1)) + 1";
+    std::cout << "Tokenizing.\n";
     Lexer lexer(source);
     //Interpreter interpreter({ Token("t",tokenType::BINOPERATOR)});
     //interpreter.interpret();
+    
     std::vector<Token> sourceTokens = lexer.tokenize();
-
+    std::cout << "Tokenized.\n";
 
     
     AST ast;
     ast.generateAST(sourceTokens);
     auto bcode = ast.nodesToBytecode(ast.root, true);
     bcode.push_back(InstructionType::END);
+    ast.bytecodeLength++;
     //ast.bytecodeString += "END";
     //std::cout << ast.bytecodeString << "\n";
     for (int i = 0; i < bcode.size(); i++)
@@ -67,6 +137,7 @@ int main()
 
     std::cout << "\nBytecode:\n";
     std::cout << bc.sayBytecode() << "\n";
+    std::cout << "Bytecode length: calculated " << ast.bytecodeLength << " vs real: " << bcode.size() << ".\n";
     std::cout << "\nExecuting...\n";
     bc.execute();
     

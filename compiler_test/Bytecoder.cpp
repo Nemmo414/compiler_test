@@ -24,6 +24,7 @@ void Bytecoder::execute()
 		switch (code.at(i))
 		{
 		int a, b;
+		bool bl;
 		case InstructionType::PUSH:
 			i++;
 			stack.push_back(code.at(i));
@@ -51,12 +52,29 @@ void Bytecoder::execute()
 				std::cout << "Variable [" << varList.size() - 1 << "]: " << varList.back() << "\n";
 				varList.pop_back();
 			}
-			while (stack.size() > stackSizes.back())
+			std::cout << "Preparing to pop stack. Stack size vector length: " << stackSizes.size() << "\n";
+			while (stack.size() > stackSizes.back()) // TODO!!!! Ponestane stacksizeova. Ovo izaziva crash. Istraziti.
 			{
+				std::cout << "Stack popped back...\n";
 				stack.pop_back();
 			}
 			stackSizes.pop_back();
 			std::cout << "Ended scope.\n";
+			break;
+		case InstructionType::JMP_IF:
+			i++; //argument
+			a = code.at(i);
+			bl = (stack.back() > 0);
+			stack.pop_back();
+			stack.push_back(!bl); //za else jump
+			if (bl == false)
+			{
+				i = a;
+			}
+			break;
+		case InstructionType::JMP:
+			i++; //argument
+			i = code.at(i);
 			break;
 		case InstructionType::EDIT: //TODO: I ovo
 			//i++ ce morati da "pojede" ID tj. sledeci element (ovo sam napisao pre nego sto sam legao da se setim)
@@ -96,10 +114,54 @@ void Bytecoder::execute()
 			stack.pop_back();
 			stack.push_back(a / b);
 			break;
+		case InstructionType::CHK_EQ:
+			a = stack.back();
+			stack.pop_back();
+			b = stack.back();
+			stack.pop_back();
+			stack.push_back(a == b);
+			break;
+		case InstructionType::CHK_NEQ:
+			a = stack.back();
+			stack.pop_back();
+			b = stack.back();
+			stack.pop_back();
+			stack.push_back(a != b);
+			break;
+		case InstructionType::CHK_LES:
+			a = stack.back();
+			stack.pop_back();
+			b = stack.back();
+			stack.pop_back();
+			stack.push_back(a < b);
+			break;
+		case InstructionType::CHK_LESORE:
+			a = stack.back();
+			stack.pop_back();
+			b = stack.back();
+			stack.pop_back();
+			stack.push_back(a <= b);
+			break;
+		case InstructionType::CHK_GRT:
+			a = stack.back();
+			stack.pop_back();
+			b = stack.back();
+			stack.pop_back();
+			stack.push_back(a > b);
+			break;
+		case InstructionType::CHK_GRTORE:
+			a = stack.back();
+			stack.pop_back();
+			b = stack.back();
+			stack.pop_back();
+			stack.push_back(a >= b);
+			break;
 		case InstructionType::PRINT:
-			std::cout << stack.back() << "\n";
+			std::cout << "\tPRINT: " << stack.back() << "\n";
 			break;
 		default:
+			std::cout << "Error: Can't execute unknown instruction type!\n";
+			exit(-1);
 			break;
 		}
 
@@ -113,8 +175,11 @@ void Bytecoder::execute()
 std::string Bytecoder::sayBytecode()
 {
 	std::string str;
+	int lineCount = 0;
 	for (int i = 0; i < code.size(); i++)
 	{
+		str +=  "[" + std::to_string(lineCount) + "] ";
+		lineCount++;
 		switch (code.at(i))
 		{
 		case InstructionType::PUSH:
@@ -129,6 +194,16 @@ std::string Bytecoder::sayBytecode()
 			break;
 		case InstructionType::EDIT:
 			str += "EDIT ";
+			i++;
+			str += std::to_string(code.at(i)) + "\n";
+			break;
+		case InstructionType::JMP_IF:
+			str += "JMP_IF ";
+			i++;
+			str += std::to_string(code.at(i)) + "\n";
+			break;
+		case InstructionType::JMP:
+			str += "JMP ";
 			i++;
 			str += std::to_string(code.at(i)) + "\n";
 			break;
@@ -155,6 +230,24 @@ std::string Bytecoder::sayBytecode()
 		case InstructionType::DIV:
 			str += "DIV\n";
 			break;
+		case InstructionType::CHK_EQ:
+			str += "CHK_EQ\n";
+			break;
+		case InstructionType::CHK_NEQ:
+			str += "CHK_NEQ\n";
+			break;
+		case InstructionType::CHK_LES:
+			str += "CHK_LES\n";
+			break;
+		case InstructionType::CHK_LESORE:
+			str += "CHK_LESORE\n";
+			break;
+		case InstructionType::CHK_GRT:
+			str += "CHK_GRT\n";
+			break;
+		case InstructionType::CHK_GRTORE:
+			str += "CHK_GRTORE\n";
+			break;
 		case InstructionType::PRINT:
 			str += "PRINT\n";
 			break;
@@ -166,7 +259,7 @@ std::string Bytecoder::sayBytecode()
 			std::cout << "ERROR: Unknown operation type.\n";
 			//exit(-1);
 			std::cout << "String so far: \n";
-			return str +  std::to_string(code.at(i)) + "<-[ERROR HERE]";
+			return str +  std::to_string(code.at(i)) + " <-[ERROR HERE]";
 			break;
 		}
 	}
