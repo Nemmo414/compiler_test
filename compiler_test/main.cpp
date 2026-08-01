@@ -41,7 +41,7 @@ int main()
     byteCodeToText(code, codeText, font1);
 
     sf::Vector2f textPos = {64, 32};
-    float spaceLength = 8.f;
+    float spaceLength = 0.f;
     float lineGap = 26;
     std::string textString;
     for (int i = 0; i < codeText.size(); i++)
@@ -55,6 +55,9 @@ int main()
             textPos.y += lineGap;
         }
     }
+
+
+    int bcPos = 0;
 
     while (window.isOpen())
     {
@@ -73,6 +76,7 @@ int main()
             //window.draw(codeText.at(i).bgRect);
             window.draw(codeText.at(i).text);
         }
+        testText.setString("Bytecode position index: " + std::to_string(bcPos));
         window.draw(testText);
         window.display();
     }
