@@ -172,6 +172,159 @@ void Bytecoder::execute()
 	//std::cout << "Finished execution, final value is " << stack.back() << ".\n";
 }
 
+void Bytecoder::executeButOnlyOne(int& i)
+{
+	std::cout << "Executing instruction at index " << i << "\n";
+	if (code.at(i) == InstructionType::ADDSCOPE)
+	{
+		std::cout << "SCOPE ADDER FOUND!\n";
+	}
+	switch (code.at(i))
+	{
+		int a, b;
+		bool bl;
+	case InstructionType::PUSH:
+		i++;
+		stack.push_back(code.at(i));
+		break;
+	case InstructionType::ADDVAR:
+		varList.push_back(0);
+		break;
+	case InstructionType::PUSHFROMVAR: //TODO: Ovo
+		i++;
+		a = code.at(i);
+		b = varList.at(a);
+		stack.push_back(b);
+		break;
+	case InstructionType::ADDSCOPE:
+		stackSizes.push_back(stack.size());
+		std::cout << "Added scope.\n";
+		break;
+	case InstructionType::ENDSCOPE:
+		std::cout << "ENDING SCOPE.\n";
+		std::cout << "VARIABLES: " << varList.size() << "\n";
+		i++; // pojede argument, tj. broj promenjivih ne racunajuci prethodni scope
+		std::cout << "Code at i: " << code.at(i) << "\n";
+		//a = 0;
+		while (varList.size() > code.at(i))
+		{
+			std::cout << "Variable [" << varList.size() - 1 << "]: " << varList.back() << "\n";
+			varList.pop_back();
+		}
+		std::cout << "Preparing to pop stack. Stack size vector length: " << stackSizes.size() << "\n";
+		while (stack.size() > stackSizes.back()) // TODO!!!! Ponestane stacksizeova. Ovo izaziva crash. Istraziti.
+		{
+			std::cout << "Stack popped back...\n";
+			stack.pop_back();
+		}
+		stackSizes.pop_back();
+		std::cout << "Ended scope.\n";
+		break;
+	case InstructionType::JMP_IF:
+		i++; //argument
+		a = code.at(i);
+		bl = (stack.back() > 0);
+		stack.pop_back();
+		stack.push_back(!bl); //za else jump
+		if (bl == false)
+		{
+			i = a;
+		}
+		break;
+	case InstructionType::JMP:
+		i++; //argument
+		i = code.at(i);
+		break;
+	case InstructionType::EDIT: //TODO: I ovo
+		//i++ ce morati da "pojede" ID tj. sledeci element (ovo sam napisao pre nego sto sam legao da se setim)
+		i++;
+		a = code.at(i);
+		//std::cout << "code.at(i) is " << code.at(i) << "\n";
+		//std::cout << "Editing var at id " << a << " of " << varList.size() << "\n";
+		varList.at(a) = stack.back();
+		stack.pop_back();
+		//std::cout << "Edited var at id " << a << " of " << varList.size() << "\n";
+		break;
+	case InstructionType::ADD:
+		a = stack.back();
+		stack.pop_back();
+		a += stack.back();
+		stack.pop_back();
+		stack.push_back(a);
+		break;
+	case InstructionType::SUB:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a - b);
+		break;
+	case InstructionType::MUL:
+		a = stack.back();
+		stack.pop_back();
+		a *= stack.back();
+		stack.pop_back();
+		stack.push_back(a);
+		break;
+	case InstructionType::DIV:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a / b);
+		break;
+	case InstructionType::CHK_EQ:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a == b);
+		break;
+	case InstructionType::CHK_NEQ:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a != b);
+		break;
+	case InstructionType::CHK_LES:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a < b);
+		break;
+	case InstructionType::CHK_LESORE:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a <= b);
+		break;
+	case InstructionType::CHK_GRT:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a > b);
+		break;
+	case InstructionType::CHK_GRTORE:
+		a = stack.back();
+		stack.pop_back();
+		b = stack.back();
+		stack.pop_back();
+		stack.push_back(a >= b);
+		break;
+	case InstructionType::PRINT:
+		std::cout << "\tPRINT: " << stack.back() << "\n";
+		break;
+	default:
+		std::cout << "Error: Can't execute unknown instruction type!\n";
+		exit(-1);
+		break;
+	}
+}
+
 std::string Bytecoder::sayBytecode()
 {
 	std::string str;

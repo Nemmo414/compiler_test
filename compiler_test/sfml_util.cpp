@@ -18,28 +18,27 @@ void byteCodeToText(std::vector<int> code, std::vector<highlightableText>& text,
 			switch (code.at(i))
 			{
 			case InstructionType::PUSH:
-				str += "PUSH ";
+				str += "PUSH";
 				eatNumber = true;
 				break;
 			case InstructionType::PUSHFROMVAR:
-				str += "PUSHFROMVAR ";
-				i++;
-				str += std::to_string(code.at(i)) + "\n";
+				str += "PUSHFROMVAR";
+				eatNumber = true;
 				break;
 			case InstructionType::EDIT:
-				str += "EDIT ";
+				str += "EDIT";
 				eatNumber = true;
 				break;
 			case InstructionType::JMP_IF:
-				str += "JMP_IF ";
+				str += "JMP_IF";
 				eatNumber = true;
 				break;
 			case InstructionType::JMP:
-				str += "JMP ";
+				str += "JMP";
 				eatNumber = true;
 				break;
 			case InstructionType::ENDSCOPE:
-				str += "ENDSCOPE ";
+				str += "ENDSCOPE";
 				eatNumber = true;
 				break;
 			case InstructionType::ADDSCOPE:

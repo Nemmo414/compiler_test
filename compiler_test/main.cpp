@@ -25,39 +25,54 @@ int main()
     font1.loadFromFile("Fonts/DOS.ttf");
 
     sf::Text testText;
+    sf::Text textStack;
+    sf::Text textScopes;
     testText.setFont(font1);
     testText.setCharacterSize(32.f);
     testText.setFillColor(sf::Color(230, 230, 225));
-    testText.setPosition(540, 64);
+    testText.setPosition(64, 2);
     testText.setString("Bytecode position index: ");
+    textStack = testText;
+    textStack.setPosition(400,32);
+    textStack.setString("Stack: \n[to be added]");
+    textScopes = testText;
+    textScopes.setPosition(700, 32);
+    textScopes.setString("Scopes: \n[to be added]");
 
     std::vector<highlightableText> codeText;
 
-    std::vector<int> code = { InstructionType::PUSH, 5, InstructionType::ADDVAR, InstructionType::EDIT, 0,
+    std::vector<int> code = {InstructionType::ADDSCOPE, InstructionType::PUSH, 5, InstructionType::ADDVAR, InstructionType::EDIT, 0,
                              InstructionType::PUSH, 3, InstructionType::ADDVAR, InstructionType::EDIT, 1,
                              InstructionType::PUSHFROMVAR, 1, InstructionType::EDIT, 0, InstructionType::PUSHFROMVAR,
-                             0, InstructionType::PRINT, InstructionType::END };
+                             0, InstructionType::PRINT, InstructionType::ENDSCOPE, InstructionType::END };
 
     byteCodeToText(code, codeText, font1);
 
     sf::Vector2f textPos = {64, 32};
-    float spaceLength = 0.f;
+    float spaceLength = 16.f;
     float lineGap = 26;
     std::string textString;
     for (int i = 0; i < codeText.size(); i++)
     {
         codeText.at(i).setPosition(textPos);
         textPos.x += codeText.at(i).text.getGlobalBounds().getSize().x + spaceLength;
-        //textString = codeText.at(i).text.getString();
+        textString = codeText.at(i).text.getString();
         if (codeText.at(i).endOfLine == true)
         {
             textPos.x = 64;
             textPos.y += lineGap;
         }
+        //std::cout << "Formatted element " << std::to_string(i) << ", " << textString << ".\n";
     }
 
+    std::cout << "Size: " << codeText.size() << "\n";
 
     int bcPos = 0;
+
+    bool nButtonReady = true;
+
+    Bytecoder visualCoder;
+    visualCoder.setCode(code);
 
     while (window.isOpen())
     {
@@ -68,16 +83,41 @@ int main()
             {
                 window.close();
             }
+            if (event.type == sf::Event::KeyPressed)
+            {
+                if (event.key.code == sf::Keyboard::N and nButtonReady and bcPos < codeText.size() - 1)
+                {
+                    visualCoder.executeButOnlyOne(bcPos);
+                    nButtonReady = false;
+                    bcPos++;
+                }
+            }
+        }
+        if (bcPos >= codeText.size() - 1)
+        {
+            std::cout << "OUT OF CODE!\n";
+            exit(0);
+        }
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::N) == false)
+        {
+            nButtonReady = true;
         }
 
         window.clear(sf::Color::Blue);
+
+        window.draw(codeText.at(bcPos).bgRect);
         for (int i = 0; i < codeText.size(); i++)
         {
             //window.draw(codeText.at(i).bgRect);
             window.draw(codeText.at(i).text);
         }
-        testText.setString("Bytecode position index: " + std::to_string(bcPos));
+        testText.setString("posIndex: [" + std::to_string(bcPos) + "/" + std::to_string(codeText.size() - 1) + "]");
+        textScopes.setString("Scopes: " + std::to_string(visualCoder.stackSizes.size()));
         window.draw(testText);
+        window.draw(textStack);
+        window.draw(textScopes);
+        
         window.display();
     }
 
